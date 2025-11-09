@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unistroke Gesture Capture</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="top">
+    <div class="main-column">
+      <div class="small">Draw with the mouse or your finger. Make one continuous stroke. After you finish, the points will be resampled and displayed.</div>
+      <div class="small">
+        This just a helper tool for the original library: <a href="https://depts.washington.edu/acelab/proj/dollar/index.html" target="_blank" rel="noopener noreferrer">$1 Unistroke Recognizer</a>.
+      </div>
+      <canvas id="c" width="300" height="300"></canvas>
+      <div class="controls">
+        <label>Sample every (px): <input id="spacing" type="number" value="20" style="width:70px" /></label>
+        <button id="resampleBtn">Resample</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+      <div class="actions">
+        <div class="add-gesture">
+          <input id="gestureName" type="text" placeholder="Gesture name" />
+          <button id="addGestureBtn">Add Gesture</button>
+          <button id="deleteGesturesBtn" class="danger">Reset Gestures</button>
+        </div>
+        <p id="status" class="status small"></p>
+      </div>
+      <div class="divider"></div>
+      <div class="output-header">
+        <label>Generated point list:</label>
+        <button id="copyBtn" class="copy-inline">Copy to clipboard</button>
+      </div>
+      <textarea id="out" readonly></textarea>
+      <div class="divider"></div>
+      <div class="gallery">
+        <p class="small">Available gestures:</p>
+        <div id="galleryList" class="gallery-list"></div>
+      </div>
+    </div>
+  </div>
+  <script src="dollar.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
