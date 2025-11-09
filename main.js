@@ -159,6 +159,43 @@ function recognizeCurrent(){
   }
 }
 
+function toPlainPoints(points){
+  if(!points) return [];
+  return points.map(p => ({
+    x: 'X' in p ? p.X : p.x,
+    y: 'Y' in p ? p.Y : p.y
+  }));
+}
+
+function loadGestureFromTemplate(points, name){
+  const plain = toPlainPoints(points);
+  if(!plain.length) return;
+  drawing = false;
+  rawPoints = plain.map(p => ({x: p.x, y: p.y}));
+  const spacing = Math.max(1, Number(spacingInput.value) || 20);
+  sampled = resampleBySpacing(rawPoints, spacing);
+  updateOutput(sampled);
+  draw();
+  if(recognizer && sampled.length){
+    const result = recognizer.Recognize(toDollarPoints(sampled), false);
+    if(result.Name === 'No match.'){
+      setStatus(`Loaded template "${name || 'gesture'}" (no match).`, true);
+    }else{
+      const percent = (result.Score * 100).toFixed(1);
+      setStatus(`Loaded template "${name || result.Name}". Matched "${result.Name}" (${percent}%), ${result.Time} ms.`);
+    }
+  }else if(name){
+    setStatus(`Loaded template "${name}".`);
+  }
+}
+
+function deleteGestureAt(index){
+  if(index < 0 || index >= recognizer.Unistrokes.length) return;
+  const removed = recognizer.Unistrokes.splice(index,1)[0];
+  setStatus(`Deleted gesture "${removed ? removed.Name : 'Unknown'}".`);
+  renderGallery();
+}
+
 function drawTemplate(ctx, points){
   if(!ctx || !points || !points.length) return;
   const width = ctx.canvas.width;
@@ -216,10 +253,12 @@ function drawTemplate(ctx, points){
 function renderGallery(){
   if(!galleryList || !recognizer || !recognizer.Unistrokes) return;
   galleryList.innerHTML = '';
-  recognizer.Unistrokes.forEach(unistroke => {
+  recognizer.Unistrokes.forEach((unistroke, index) => {
     if(!unistroke || !unistroke.Points) return;
     const item = document.createElement('div');
     item.className = 'gallery-item';
+    item.setAttribute('role', 'button');
+    item.tabIndex = 0;
 
     const templateCanvas = document.createElement('canvas');
     templateCanvas.width = 100;
@@ -235,6 +274,33 @@ function renderGallery(){
 
     item.appendChild(templateCanvas);
     item.appendChild(label);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'gallery-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', e=>{
+      e.stopPropagation();
+      deleteGestureAt(index);
+    });
+    deleteBtn.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        deleteGestureAt(index);
+      }
+    });
+    item.appendChild(deleteBtn);
+
+    const activate = ()=>{
+      loadGestureFromTemplate(sourcePoints, unistroke.Name);
+    };
+    item.addEventListener('click', activate);
+    item.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        activate();
+      }
+    });
     galleryList.appendChild(item);
   });
 }
@@ -304,8 +370,8 @@ if(addGestureBtn){
 
 if(deleteGesturesBtn){
   deleteGesturesBtn.addEventListener('click', ()=>{
-    const count = recognizer.DeleteUserGestures();
-    setStatus(`User gestures cleared. Base templates available: ${count}.`);
+    recognizer.Unistrokes = [];
+    setStatus('All gestures removed.');
     renderGallery();
   });
 }
