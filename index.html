@@ -19,6 +19,9 @@
         <button id="resampleBtn">Resample</button>
         <button id="clearBtn">Clear</button>
       </div>
+      <div class="controls">
+        <label><input id="checkReverse" type="checkbox" checked /> Check reversed gesture</label>
+      </div>
       <div class="actions">
         <div class="add-gesture">
           <input id="gestureName" type="text" placeholder="Gesture name" />
@@ -28,15 +31,21 @@
         <p id="status" class="status small"></p>
       </div>
       <div class="divider"></div>
-      <div class="output-header">
-        <label>Point list:</label>
-        <button id="copyBtn" class="copy-inline">Copy to clipboard</button>
-      </div>
+      <label>Point list:</label>
       <textarea id="out" readonly></textarea>
+      <button id="copyBtn" class="copy-inline">Copy to clipboard</button>
       <div class="divider"></div>
       <div class="gallery">
         <p class="small">Available gestures:</p>
         <div id="galleryList" class="gallery-list"></div>
+        <textarea id="galleryExport" readonly></textarea>
+        <button id="copyGalleryBtn" class="copy-inline">Copy to clipboard</button>
+      </div>
+      <div class="divider"></div>
+      <div class="import-section">
+        <label class="small">Import gestures:</label>
+        <textarea id="importInput" placeholder='this.Unistrokes[0] = new Unistroke("triangle", new Array(new Point(137,139),new Point(135,141),...));&#10;this.Unistrokes[1] = new Unistroke("rect", new Array(new Point(321,321),...));'></textarea>
+        <button id="importBtn">Import Gestures</button>
       </div>
     </div>
   </div>

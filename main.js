@@ -10,6 +10,11 @@ const deleteGesturesBtn = document.getElementById('deleteGesturesBtn');
 const gestureNameInput = document.getElementById('gestureName');
 const statusEl = document.getElementById('status');
 const galleryList = document.getElementById('galleryList');
+const checkReverseInput = document.getElementById('checkReverse');
+const importInput = document.getElementById('importInput');
+const importBtn = document.getElementById('importBtn');
+const galleryExport = document.getElementById('galleryExport');
+const copyGalleryBtn = document.getElementById('copyGalleryBtn');
 
 let drawing = false;
 let rawPoints = []; // {x,y}
@@ -150,13 +155,40 @@ function recognizeCurrent(){
     setStatus('');
     return;
   }
-  const result = recognizer.Recognize(toDollarPoints(sampled), false);
-  if(result.Name === 'No match.'){
-    setStatus('No match.', true);
-  }else{
-    const percent = (result.Score * 100).toFixed(1);
-    setStatus(`Matched "${result.Name}" (${percent}%), ${result.Time} ms.`);
+  
+  const points = toDollarPoints(sampled);
+  const result1 = recognizer.Recognize(points, false);
+  
+  if(!checkReverseInput || !checkReverseInput.checked){
+    // Normal recognition only
+    if(result1.Name === 'No match.'){
+      setStatus('No match.', true);
+    }else{
+      const percent = (result1.Score * 100).toFixed(1);
+      setStatus(`Matched "${result1.Name}" (${percent}%), ${result1.Time} ms.`);
+    }
+    return;
   }
+  
+  // Check both normal and reversed
+  const reversedPoints = points.slice().reverse();
+  const result2 = recognizer.Recognize(reversedPoints, false);
+  
+  // Find the best result
+  const bestResult = result1.Score > result2.Score ? result1 : result2;
+  
+  if(bestResult.Name === 'No match.'){
+    setStatus('No match (both directions).', true);
+    return;
+  }
+  
+  const bestPercent = (bestResult.Score * 100).toFixed(1);
+  
+  let statusText = `Normal: "${result1.Name}" (${(result1.Score * 100).toFixed(1)}%), ${result1.Time} ms. `;
+  statusText += `Reversed: "${result2.Name}" (${(result2.Score * 100).toFixed(1)}%), ${result2.Time} ms. `;
+  statusText += `→ Best: "${bestResult.Name}" (${bestPercent}%)`;
+  
+  setStatus(statusText);
 }
 
 function toPlainPoints(points){
@@ -250,6 +282,23 @@ function drawTemplate(ctx, points){
   }
 }
 
+function generateExportText(){
+  if(!recognizer || !recognizer.Unistrokes) return '';
+  
+  const lines = [];
+  recognizer.Unistrokes.forEach((unistroke, index) => {
+    if(!unistroke || !unistroke.OriginalPoints) return;
+    
+    const points = unistroke.OriginalPoints;
+    const pointStrings = points.map(p => `new Point(${p.X}, ${p.Y})`);
+    const pointsArray = `new Array(${pointStrings.join(',')})`;
+    const line = `this.Unistrokes[${index}] = new Unistroke("${unistroke.Name}", ${pointsArray});`;
+    lines.push(line);
+  });
+  
+  return lines.join('\n');
+}
+
 function renderGallery(){
   if(!galleryList || !recognizer || !recognizer.Unistrokes) return;
   galleryList.innerHTML = '';
@@ -303,6 +352,11 @@ function renderGallery(){
     });
     galleryList.appendChild(item);
   });
+  
+  // Update export textarea
+  if(galleryExport){
+    galleryExport.value = generateExportText();
+  }
 }
 
 // helpers: mouse + touch
@@ -330,6 +384,26 @@ copyBtn.addEventListener('click', async ()=>{
     alert('Copy failed — copy manually.');
   }
 });
+
+if(copyGalleryBtn && galleryExport){
+  copyGalleryBtn.addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(galleryExport.value);
+      copyGalleryBtn.textContent = 'Copied ✓';
+      setTimeout(()=>copyGalleryBtn.textContent='Copy to clipboard',900);
+    }catch(e){
+      alert('Copy failed — copy manually.');
+    }
+  });
+}
+
+if(checkReverseInput){
+  checkReverseInput.addEventListener('change', ()=>{
+    if(sampled.length){
+      recognizeCurrent();
+    }
+  });
+}
 
 if(resampleBtn){
   resampleBtn.addEventListener('click', ()=>{
@@ -372,6 +446,86 @@ if(deleteGesturesBtn){
   deleteGesturesBtn.addEventListener('click', ()=>{
     recognizer.Unistrokes = [];
     setStatus('All gestures removed.');
+    renderGallery();
+  });
+}
+
+function parseImportText(text){
+  if(!text || !text.trim()) return [];
+  
+  const gestures = [];
+  // Match: (optional: this.Unistrokes[...] = ) new Unistroke("name", new Array(...))
+  // We'll match the name first, then find the array content by counting parentheses
+  const unistrokePattern = /(?:this\.Unistrokes\[\d+\]\s*=\s*)?new\s+Unistroke\s*\(\s*["']([^"']+)["']\s*,\s*new\s+Array\s*\(/g;
+  
+  let match;
+  while((match = unistrokePattern.exec(text)) !== null){
+    const name = match[1];
+    const startPos = match.index + match[0].length;
+    
+    // Find the matching closing paren for the Array
+    let depth = 1;
+    let pos = startPos;
+    let endPos = -1;
+    
+    while(pos < text.length && depth > 0){
+      if(text[pos] === '(') depth++;
+      else if(text[pos] === ')') depth--;
+      pos++;
+    }
+    
+    if(depth === 0){
+      endPos = pos - 1;
+      const pointsText = text.substring(startPos, endPos);
+      
+      // Extract all Point(x, y) from the array
+      const pointPattern = /new\s+Point\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/g;
+      const points = [];
+      let pointMatch;
+      
+      while((pointMatch = pointPattern.exec(pointsText)) !== null){
+        const x = parseInt(pointMatch[1], 10);
+        const y = parseInt(pointMatch[2], 10);
+        if(!isNaN(x) && !isNaN(y)){
+          points.push(new Point(x, y));
+        }
+      }
+      
+      if(points.length > 0){
+        gestures.push({name, points});
+      }
+    }
+  }
+  
+  return gestures;
+}
+
+if(importBtn && importInput){
+  importBtn.addEventListener('click', ()=>{
+    const text = importInput.value.trim();
+    if(!text){
+      setStatus('Enter gesture data to import.', true);
+      return;
+    }
+    
+    const gestures = parseImportText(text);
+    if(gestures.length === 0){
+      setStatus('No valid gestures found in import text.', true);
+      return;
+    }
+    
+    let imported = 0;
+    for(const gesture of gestures){
+      try{
+        recognizer.AddGesture(gesture.name, gesture.points);
+        imported++;
+      }catch(e){
+        console.error('Error importing gesture:', gesture.name, e);
+      }
+    }
+    
+    setStatus(`Imported ${imported} gesture(s).`);
+    importInput.value = '';
     renderGallery();
   });
 }
