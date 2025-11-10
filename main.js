@@ -135,8 +135,9 @@ function draw(){
 
 function updateOutput(arr){
   if(!arr || arr.length===0){ out.value = ''; return; }
-  const formatted = arr.map(p => `new Point(${Math.round(p.x)}, ${Math.round(p.y)})`).join(', ');
-  out.value = formatted;
+  const pointStrings = arr.map(p => `new Point(${Math.round(p.x)}, ${Math.round(p.y)})`);
+  const pointsArray = `new Array(${pointStrings.join(',')})`;
+  out.value = `this.Unistrokes.push(new Unistroke("symbol_name", ${pointsArray}));`;
 }
 
 function toDollarPoints(arr){
@@ -286,13 +287,13 @@ function generateExportText(){
   if(!recognizer || !recognizer.Unistrokes) return '';
   
   const lines = [];
-  recognizer.Unistrokes.forEach((unistroke, index) => {
+  recognizer.Unistrokes.forEach((unistroke) => {
     if(!unistroke || !unistroke.OriginalPoints) return;
     
     const points = unistroke.OriginalPoints;
     const pointStrings = points.map(p => `new Point(${p.X}, ${p.Y})`);
     const pointsArray = `new Array(${pointStrings.join(',')})`;
-    const line = `this.Unistrokes[${index}] = new Unistroke("${unistroke.Name}", ${pointsArray});`;
+    const line = `this.Unistrokes.push(new Unistroke("${unistroke.Name}", ${pointsArray}));`;
     lines.push(line);
   });
   
@@ -454,9 +455,9 @@ function parseImportText(text){
   if(!text || !text.trim()) return [];
   
   const gestures = [];
-  // Match: (optional: this.Unistrokes[...] = ) new Unistroke("name", new Array(...))
+  // Match: (optional: this.Unistrokes[...] = or this.Unistrokes.push() ) new Unistroke("name", new Array(...))
   // We'll match the name first, then find the array content by counting parentheses
-  const unistrokePattern = /(?:this\.Unistrokes\[\d+\]\s*=\s*)?new\s+Unistroke\s*\(\s*["']([^"']+)["']\s*,\s*new\s+Array\s*\(/g;
+  const unistrokePattern = /(?:this\.Unistrokes(?:\[\d+\]\s*=\s*|\.push\s*\()\s*)?new\s+Unistroke\s*\(\s*["']([^"']+)["']\s*,\s*new\s+Array\s*\(/g;
   
   let match;
   while((match = unistrokePattern.exec(text)) !== null){
