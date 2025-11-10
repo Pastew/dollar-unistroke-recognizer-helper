@@ -184,9 +184,9 @@ function recognizeCurrent(){
   
   const bestPercent = (bestResult.Score * 100).toFixed(1);
   
-  let statusText = `Normal: "${result1.Name}" (${(result1.Score * 100).toFixed(1)}%), ${result1.Time} ms. `;
-  statusText += `Reversed: "${result2.Name}" (${(result2.Score * 100).toFixed(1)}%), ${result2.Time} ms. `;
-  statusText += `→ Best: "${bestResult.Name}" (${bestPercent}%)`;
+  let statusText = `Normal: "${result1.Name}" (${(result1.Score * 100).toFixed(1)}%), ${result1.Time} ms.\n`;
+  statusText += `Reversed: "${result2.Name}" (${(result2.Score * 100).toFixed(1)}%), ${result2.Time} ms.\n`;
+  statusText += `Best: "${bestResult.Name}" (${bestPercent}%)`;
   
   setStatus(statusText);
 }

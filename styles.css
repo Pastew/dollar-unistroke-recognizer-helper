@@ -15,11 +15,11 @@ label{font-size:13px}
 .copy-inline:hover{background:#ebebeb}
 .output-header{display:flex;align-items:flex-start;gap:8px;width:100%}
 .output-header textarea{flex:1}
-.actions{display:flex;flex-direction:column;gap:8px}
-.add-gesture{display:flex;gap:6px;flex-wrap:wrap}
-.add-gesture input{flex:1;padding:6px;border:1px solid #aaa;border-radius:6px;font-size:13px}
+.actions{display:flex;flex-direction:column;gap:8px;width:100%}
+.add-gesture{display:flex;gap:6px;flex-wrap:wrap;width:100%;max-width:100%}
+.add-gesture input{flex:1;min-width:0;max-width:300px;padding:6px;border:1px solid #aaa;border-radius:6px;font-size:13px}
 .add-gesture button{flex-shrink:0}
-.status{min-height:18px;margin:0}
+.status{height:60px;margin:0;word-wrap:break-word;overflow-wrap:break-word;white-space:pre-line;overflow-y:auto}
 .status.error{color:#a11}
 .danger{background:#f7e6e6;border-color:#d77;color:#a11}
 .gallery{display:flex;flex-direction:column;gap:6px}
