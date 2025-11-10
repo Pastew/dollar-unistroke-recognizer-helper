@@ -1,7 +1,7 @@
 :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
 body{display:flex;flex-direction:column;gap:12px;padding:14px;max-width:1000px;margin:0 auto}
 .top{display:flex;justify-content:center}
-.main-column{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.main-column{display:flex;flex-direction:column;gap:12px;align-items:flex-start;width:1000px}
 .sidebar{display:none}
 canvas{border:1px solid #ccc;background:#fff;border-radius:6px;touch-action:none}
 button{padding:8px 12px;border-radius:6px;border:1px solid #888;background:#f3f3f3}
@@ -23,6 +23,7 @@ label{font-size:13px}
 .status.error{color:#a11}
 .danger{background:#f7e6e6;border-color:#d77;color:#a11}
 .gallery{display:flex;flex-direction:column;gap:6px}
+.gallery-header{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .gallery-list{display:flex;flex-wrap:wrap;gap:8px}
 #galleryExport{height:120px;resize:vertical}
 #copyBtn{align-self:flex-start}

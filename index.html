@@ -26,7 +26,6 @@
         <div class="add-gesture">
           <input id="gestureName" type="text" placeholder="Gesture name" />
           <button id="addGestureBtn">Add Gesture</button>
-          <button id="deleteGesturesBtn" class="danger">Delete All Gestures</button>
         </div>
         <p id="status" class="status small"></p>
       </div>
@@ -36,7 +35,10 @@
       <button id="copyBtn" class="copy-inline">Copy to clipboard</button>
       <div class="divider"></div>
       <div class="gallery">
-        <p class="small">Available gestures:</p>
+        <div class="gallery-header">
+          <p class="small">Available gestures:</p>
+          <button id="deleteGesturesBtn" class="danger">Delete All Gestures</button>
+        </div>
         <div id="galleryList" class="gallery-list"></div>
         <textarea id="galleryExport" readonly></textarea>
         <button id="copyGalleryBtn" class="copy-inline">Copy to clipboard</button>
