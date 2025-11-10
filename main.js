@@ -150,6 +150,23 @@ function setStatus(message, isError = false){
   statusEl.classList.toggle('error', !!isError && !!message);
 }
 
+function checkDuplicateGestures(){
+  if(!recognizer || !recognizer.Unistrokes) return;
+  
+  const nameCounts = {};
+  recognizer.Unistrokes.forEach(unistroke => {
+    if(unistroke && unistroke.Name){
+      nameCounts[unistroke.Name] = (nameCounts[unistroke.Name] || 0) + 1;
+    }
+  });
+  
+  const duplicates = Object.keys(nameCounts).filter(name => nameCounts[name] > 1);
+  if(duplicates.length > 0){
+    const duplicateNames = duplicates.join(', ');
+    setStatus(`Warning: You have duplicate available gestures: ${duplicateNames}`, true);
+  }
+}
+
 function recognizeCurrent(){
   if(!recognizer) return;
   if(!sampled.length){
@@ -358,6 +375,9 @@ function renderGallery(){
   if(galleryExport){
     galleryExport.value = generateExportText();
   }
+  
+  // Check for duplicate gesture names
+  checkDuplicateGestures();
 }
 
 // helpers: mouse + touch
